@@ -3172,9 +3172,8 @@ export default function HomePage() {
                           )}
                         >
                           <ActivePersonaIcon
-                            className="h-7 w-7 sm:h-8 sm:w-8"
-                            strokeWidth={2.1}
-                          />
+  className="h-7 w-7 sm:h-8 sm:w-8"
+/>
                         </div>
 
                         <div className="min-w-0">

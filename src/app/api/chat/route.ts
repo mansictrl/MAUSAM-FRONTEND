@@ -321,7 +321,12 @@ PROBABILITY VS LIVE OBSERVATION RULES:
 
 ${weatherSnippet}`;
 const groqApiKey = process.env.GROQ_API_KEY;
-    let assistantReply = "";
+
+if (!groqApiKey) {
+  throw new Error("GROQ_API_KEY is not configured");
+}
+
+let assistantReply = "";
     const candidateModels = [
       "openai/gpt-oss-120b",
       "qwen/qwen3.8-27b",

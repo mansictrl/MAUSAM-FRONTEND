@@ -294,7 +294,8 @@ export async function POST(req: NextRequest) {
       computedReason = "Mild park playtime weather";
     }
 
-const groqApiKey = process.env.GROQ_API_KEY;
+   const groqApiKey = process.env.GROQ_API_KEY;
+
     const isNonEnglish = userLanguage && userLanguage.toLowerCase() !== "english";
     const langInstruction = isNonEnglish
       ? `CRITICAL LANGUAGE REQUIREMENT: All metric_notes values, score_reason, and avoid_reason MUST BE WRITTEN IN ${userLanguage} (use native script).`
@@ -326,7 +327,7 @@ Output strictly valid JSON with no markdown and no backticks:
   "avoid_reason": "short reason"
 }`;
 
-    if (apiKey) {
+    if (groqApiKey) {
       const modelsToTry = [
         "openai/gpt-oss-120b",
         "qwen/qwen3.8-27b",
@@ -344,7 +345,7 @@ Output strictly valid JSON with no markdown and no backticks:
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey.trim()}`,
+                Authorization: `Bearer ${groqApiKey.trim()}`,
               },
               body: JSON.stringify({
                 model: modelName,
