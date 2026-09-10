@@ -320,9 +320,7 @@ PROBABILITY VS LIVE OBSERVATION RULES:
 5. If the user asks a non-weather question (e.g. math), answer it accurately in the same message.
 
 ${weatherSnippet}`;
-
-    const groqApiKey =
-     const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const groqApiKey = process.env.GROQ_API_KEY;
     let assistantReply = "";
     const candidateModels = [
       "openai/gpt-oss-120b",

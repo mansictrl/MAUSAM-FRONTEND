@@ -294,8 +294,7 @@ export async function POST(req: NextRequest) {
       computedReason = "Mild park playtime weather";
     }
 
-   const GROQ_API_KEY = process.env.GROQ_API_KEY;
-
+const groqApiKey = process.env.GROQ_API_KEY;
     const isNonEnglish = userLanguage && userLanguage.toLowerCase() !== "english";
     const langInstruction = isNonEnglish
       ? `CRITICAL LANGUAGE REQUIREMENT: All metric_notes values, score_reason, and avoid_reason MUST BE WRITTEN IN ${userLanguage} (use native script).`
