@@ -49,34 +49,84 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState<boolean>(false);
 
   // Load existing preferences & units from localStorage / API
-  useEffect(() => {
-    // Load units
-    const storedTemp = localStorage.getItem("mausam_temp_unit") as "c" | "f" | null;
-    const storedWind = localStorage.getItem("mausam_wind_unit") as "kmh" | "mph" | null;
-    if (storedTemp) setTempUnit(storedTemp);
-    if (storedWind) setWindUnit(storedWind);
+ useEffect(() => {
+  // Load units
+  const storedTemp = localStorage.getItem("mausam_temp_unit") as "c" | "f" | null;
+  const storedWind = localStorage.getItem("mausam_wind_unit") as "kmh" | "mph" | null;
 
-    if (!deviceId) return;
-    async function load() {
-      try {
-        const data = await fetchPreferences(deviceId);
-        if (data.personas && data.personas.length > 0) {
-          const filtered = data.personas.filter((p) => p !== "default_general");
-          if (filtered.length > 0) {
-            setSelectedPersonas(filtered);
-          }
-        }
-        if (data.health_flags) {
-          setSelectedHealthFlags(data.health_flags);
-        }
-      } catch (err) {
-        console.error("Could not fetch preferences", err);
-      } finally {
-        setLoading(false);
+  if (storedTemp) setTempUnit(storedTemp);
+  if (storedWind) setWindUnit(storedWind);
+
+  // For the frontend demo, localStorage is the primary source
+  const storedPersonas = localStorage.getItem("mausam_personas");
+
+  if (storedPersonas) {
+    try {
+      const parsed = JSON.parse(storedPersonas);
+
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setSelectedPersonas(parsed);
       }
+    } catch (err) {
+      console.error("Invalid stored personas", err);
     }
-    load();
-  }, [deviceId]);
+  }
+
+  const storedHealthFlags = localStorage.getItem("mausam_health_flags");
+
+  if (storedHealthFlags) {
+    try {
+      const parsed = JSON.parse(storedHealthFlags);
+
+      if (Array.isArray(parsed)) {
+        setSelectedHealthFlags(parsed);
+      }
+    } catch (err) {
+      console.error("Invalid stored health flags", err);
+    }
+  }
+
+  // API is optional — the UI should still work without the backend
+  if (!deviceId) {
+    setLoading(false);
+    return;
+  }
+
+  async function load() {
+    try {
+      const data = await fetchPreferences(deviceId);
+
+      // Only use API personas if nothing is stored locally
+      if (!storedPersonas && data.personas && data.personas.length > 0) {
+        const filtered = data.personas.filter(
+          (p) => p !== "default_general"
+        );
+
+        if (filtered.length > 0) {
+          setSelectedPersonas(filtered);
+          localStorage.setItem(
+            "mausam_personas",
+            JSON.stringify(filtered)
+          );
+        }
+      }
+
+      if (!storedHealthFlags && data.health_flags) {
+        setSelectedHealthFlags(data.health_flags);
+        localStorage.setItem(
+          "mausam_health_flags",
+          JSON.stringify(data.health_flags)
+        );
+      }
+    } catch (err) {
+      console.error("Could not fetch preferences — using local demo preferences", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  load();
+}, [deviceId]); 
 
   const togglePersona = (id: string) => {
     if (selectedPersonas.includes(id)) {
@@ -107,30 +157,42 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    // Persist units
-    localStorage.setItem("mausam_temp_unit", tempUnit);
-    localStorage.setItem("mausam_wind_unit", windUnit);
-    window.dispatchEvent(new Event("mausam_units_changed"));
+ const handleSave = async () => {
+  setSaving(true);
 
-    try {
+  // Always save locally for the frontend demo
+  localStorage.setItem(
+    "mausam_personas",
+    JSON.stringify(selectedPersonas)
+  );
+
+  localStorage.setItem(
+    "mausam_health_flags",
+    JSON.stringify(selectedHealthFlags)
+  );
+
+  try {
+    // Backend sync is optional
+    if (deviceId) {
       await updatePreferences({
         device_id: deviceId,
         personas: selectedPersonas,
         health_flags: selectedHealthFlags,
         saved_locations: [],
       });
-      setSavedSuccess(true);
-      setTimeout(() => setSavedSuccess(false), 3000);
-    } catch (err) {
-      console.error("Failed to save preferences", err);
-      setSavedSuccess(true);
-      setTimeout(() => setSavedSuccess(false), 3000);
-    } finally {
-      setSaving(false);
     }
-  };
+  } catch (err) {
+    console.error("Backend unavailable — local preferences saved", err);
+  }
+
+  setSavedSuccess(true);
+
+  setTimeout(() => {
+    setSavedSuccess(false);
+  }, 2500);
+
+  setSaving(false);
+};
 
   const handleReset = async () => {
     setSelectedPersonas(["health"]);

@@ -2720,6 +2720,22 @@ export default function HomePage() {
   const [activeExplanationRef, setActiveExplanationRef] = useState<string | null>(null);
   const [activeCardTitle, setActiveCardTitle] = useState<string>("");
   const [selectedPersona, setSelectedPersona] = useState<string>("health");
+  const [localPersonas, setLocalPersonas] = useState<string[]>([]);
+  useEffect(() => {
+  const stored = localStorage.getItem("mausam_personas");
+
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setLocalPersonas(parsed);
+      }
+    } catch (err) {
+      console.error("Invalid local personas", err);
+    }
+  }
+}, []);
 
   const {
     coords,
@@ -2777,9 +2793,13 @@ export default function HomePage() {
     return `${kmh.toFixed(1)} kph`;
   };
 
-  const userSelectedPersonaIds: string[] =
-    userPrefs?.personas && userPrefs.personas.length > 0
-      ? userPrefs.personas.filter((p: string) => p !== "default_general")
+const userSelectedPersonaIds: string[] =
+  localPersonas.length > 0
+    ? localPersonas
+    : userPrefs?.personas && userPrefs.personas.length > 0
+      ? userPrefs.personas.filter(
+          (p: string) => p !== "default_general"
+        )
       : ["health"];
 
   const displayPersonaList =

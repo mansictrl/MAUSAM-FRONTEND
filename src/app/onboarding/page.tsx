@@ -67,25 +67,39 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
+const handleSave = async () => {
+  setSaving(true);
+
+  // Save locally so the frontend demo works without the backend
+  localStorage.setItem(
+    "mausam_personas",
+    JSON.stringify(selectedPersonas)
+  );
+
+  localStorage.setItem(
+    "mausam_health_flags",
+    JSON.stringify(selectedHealthFlags)
+  );
+
+  localStorage.setItem("mausam_onboarding_completed", "true");
+
+  try {
+    // Backend sync is optional
+    if (deviceId) {
       await updatePreferences({
         device_id: deviceId,
         personas: selectedPersonas,
         health_flags: selectedHealthFlags,
         saved_locations: [],
       });
-      localStorage.setItem("mausam_onboarding_completed", "true");
-      router.push("/home");
-    } catch (err) {
-      console.error("Failed to save preferences", err);
-      localStorage.setItem("mausam_onboarding_completed", "true");
-      router.push("/home");
-    } finally {
-      setSaving(false);
     }
-  };
+  } catch (err) {
+    console.error("Backend unavailable — local preferences saved", err);
+  } finally {
+    setSaving(false);
+    router.push("/home");
+  }
+};
 
   const personasList = [
     {
